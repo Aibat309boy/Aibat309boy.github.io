@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aibat</title>
+    <link class="tab-icon" rel="icon" type="image/png" href="assets/avatar.png">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body { 
+            background: #121318 url('assets/nightstar.png') no-repeat center center fixed; 
+            background-size: cover; 
+            color: #f3f4f6; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            font-size: 1rem; 
+            position: relative;
+        }
+
+        .desktop-shortcut {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 80px;
+            cursor: pointer;
+            user-select: none;
+            padding: 8px;
+            border-radius: 0px;
+            border: 1px solid transparent;
+            transition: background 0.1s, border 0.1s;
+            z-index: 1;
+        }
+
+        .desktop-shortcut:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .desktop-icon {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .desktop-label {
+            font-size: 0.75rem;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .glass-container {
+            position: absolute;
+            width: 820px;
+            height: 699px; /*nice lol*/
+            background: rgba(24, 24, 28, 0.445); 
+            border: 1px solid rgba(255, 255, 255, 0.075); 
+            border-radius: 0px; 
+            
+            backdrop-filter: blur(5px) saturate(125%); 
+            -webkit-backdrop-filter: blur(5px) saturate(125%); 
+            
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        .glass-container.open-animation {
+			display: flex !important;
+			animation: winOpen 0.24s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+		}
+
+        .glass-container.close-animation {
+        animation: winClose 0.18s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+        }
+
+        @keyframes winOpen {
+			from { 
+				opacity: 0; 
+				transform: scale(0.9); 
+			}
+			to { 
+				opacity: 1; 
+				transform: scale(1); 
+			}
+		}
+
+        @keyframes winClose {
+			from { opacity: 1; transform: scale(1); } 
+			to { opacity: 0; transform: scale(0.95); }
+		}
+
+        .win-titlebar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(107, 107, 107, 0.2);
+            height: 32px;
+            padding-left: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            user-select: none;
+            flex-shrink: 0;
+            cursor: default; 
+        }
+
+        .win-title-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: #cccccc;
+            pointer-events: none; 
+        }
+
+        .win-title-icon {
+            width: 14px;
+            height: 14px;
+            object-fit: cover;
+        }
+
+        .win-controls-right {
+            display: flex;
+            height: 100%;
+        }
+
+        .win-btn {
+            width: 46px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: #cccccc;
+            cursor: pointer;
+            transition: background-color 0.1s ease, color 0.1s ease;
+        }
+
+        .win-btn svg {
+            width: 10px;
+            height: 10px;
+            fill: currentColor;
+        }
+
+        .win-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .win-btn.btn-close:hover {
+            background-color: #e81123 !important;
+            color: #ffffff !important;
+        }
+
+        .glass-body {
+            padding: 20px 45px 45px 45px;
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+            flex-grow: 1;
+            overflow-y: auto;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .glass-body::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            background: transparent;
+        }
+
+        .glass-body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .header-bar {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            border-bottom: 1.5px solid rgba(122, 0, 0, 0);
+            padding-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        /* pin hug coin!*/
+            .brand-image-pincoin {
+            width: 599px;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 5px;
+            transition: opacity 0.2s ease;
+        }
+
+        .brand-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: inherit;
+            text-decoration: none;
+            user-select: none;
+        }
+
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: opacity 0.2s ease;
+        }
+
+        .brand-card:hover .brand-logo {
+            opacity: 0.9;
+        }
+
+        .brand-text h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+
+		.brand-divider-container {
+			display: flex;
+			align-items: center;
+			gap: 0px; 
+			margin: 1px 0;
+			width: 100%;
+		}
+
+		.brand-divider-icon {
+			height: 15px;
+			width: auto;
+			display: block;
+			opacity: 2;
+		}
+
+		.brand-divider-line {
+			flex-grow: 1; 
+			height: 5px;
+			background: linear-gradient(to right, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1) 70%, rgba(255, 255, 255, 0));
+		}
+
+        .brand-subtitle {
+            font-size: 0.85rem;
+            color: #a1a1aa; 
+            text-transform: lowercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 0px;
+        }
+
+        .nav-link {
+            color: #FFFFFF;
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-decoration: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.1s ease, color 0.1s ease;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #ffffff;
+        }
+
+        .nav-link.active {
+            background-color: rgba(53, 97, 203);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .page-content {
+            display: none;
+            width: 100%;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+
+        .section-desc {
+            font-size: 1rem;
+            color: #cbd5e1;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        #about .section-title,
+        #about .section-desc,
+        #about p {
+            text-align: center;
+        }
+
+        .social-icon-wrapper {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .social-icon-wrapper svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .social-btn:hover {
+            border-color: rgba(255, 255, 255, 0.712);
+            transform: translateY(-1px);
+        }
+        .social-btn.youtube:hover { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); }
+        .social-btn.reddit:hover { background: rgba(249, 115, 22, 0.12); border-color: rgba(249, 115, 22, 0.25); }
+        .social-btn.github:hover { background: rgba(255, 255, 255, 0.08); }
+        .social-btn.discord:hover { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.25); }
+
+        .fanmade-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .blog-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .blog-item {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .blog-aside-img {
+            width: 140px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .blog-body-content {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .blog-headline {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.4;
+        }
+
+        .blog-link {
+            color: #00ffff;
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 500;
+            transition: color 0.15s ease;
+            display: inline-block;
+        }
+
+        .blog-link:hover {
+            color: #33ffff;
+            text-decoration: underline;
+        }
+
+        .blog-text {
+            font-size: 0.95rem;
+            color: #d6d6d6;
+            line-height: 1.5;
+        }
+
+		.credit-watermark {
+			position: absolute;
+			bottom: 15px;
+			left: 20px;
+			font-size: 15px;
+			color: rgba(255, 255, 255, 0.548) !important;
+			font-weight: 400;
+			letter-spacing: 0.3px;
+			pointer-events: none; 
+			user-select: none;    
+			z-index: 10;
+		}	
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            margin-top: 8px;
+        }
+
+        body.phone-version .desktop-shortcut {
+            display: none;
+        }
+
+        body.phone-version .glass-container {
+            backdrop-filter: blur(0px) saturate(100%); 
+            -webkit-backdrop-filter: blur(0px) saturate(100%); 
+            position: fixed;
+            left: 0px !important;
+            top: 0px !important;
+            right: 0px !important;
+            bottom: 0px !important;
+            width: auto !important;
+            height: auto !important;
+            border-radius: 0px;
+        }
+        
+        .brand-image-pincoin-phone-version {
+    display: block;
+    width: 90%;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto; 
+    border-radius: 5px;
+}
+
+
+        body.phone-version .win-titlebar {
+            display: none;
+        }
+
+        body.phone-version .glass-body {
+            padding: 20px;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .desktop-shortcut {
+                top: 15px;
+                left: 15px;
+            }
+            .glass-body {
+                padding: 20px;
+                gap: 24px;
+            }
+            .glass-body::-webkit-scrollbar {
+                display: none;
+            }
+            .glass-body {
+                -ms-overflow-style: none; 
+                scrollbar-width: none; 
+            }
+            .header-bar {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+                padding-bottom: 16px;
+            }
+            .brand-card {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .brand-divider {
+                background: linear-gradient(to right, transparent, #ffffff, transparent);
+            }
+            .socials-grid {
+                grid-template-columns: 1fr;
+            }
+            .blog-item {
+                flex-direction: column;
+                gap: 14px;
+            }
+            .blog-aside-img {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 16/10;
+            }
+
+            center {
+                display: block;
+                text-align: center;
+            }
+            
+            .centerimg {
+                display: inline-block;
+            }
+
+            .centerspan {
+                display: inline-block;
+                text-align: center;
+            }
+
+        }
+    </style>
+</head>
+<body>
+
+    <div class="desktop-shortcut" onclick="openWindow()">
+        <img src="assets/avatar.png" alt="App Icon" class="desktop-icon">
+        <span class="desktop-label">Aibat</span>
+    </div>
+
+    <div class="glass-container open-animation" id="appWindow">
+        
+        <div class="win-titlebar" id="windowTitlebar">
+            <div class="win-title-left">
+                <img src="assets/avatar.png" alt="" class="win-title-icon">
+                <span>Aibat</span>
+            </div>
+            <div class="win-controls-right">
+                <button class="win-btn btn-close" title="Close" onclick="closeWindow()">
+                    <svg viewBox="0 0 10 10"><path d="M10 1L9 0 5 4 1 0 0 1l4 4-4 4 1 1 4-4 4 4 1-1-4-4z"/></svg>
+                </button>
+            </div>
+        </div>
+		
+        <div class="glass-body">
+            
+            <header class="header-bar">
+                <div class="brand-card">
+                    <img class="brand-logo" src="assets/avatar.png" alt="Aibat"> 
+                    <div class="brand-text">
+				<h2>Aibat309boy</h2>
+				<div class="brand-divider-container">
+					<img src="assets/shipstar.png" alt="" class="brand-divider-icon">
+					<div class="brand-divider-line"></div>
+				</div>
+				<p class="brand-subtitle">official website</p>
+			</div>
+                </div>
+				
+			<nav class="nav-menu">
+				<span class="nav-link active" onclick="switchTab(event, 'about')">
+				<p style="color: #FFFFFF; font-weight: 500; font-size: 1rem; letter-spacing: 0px;">About</p>
+				</span>
+				<span class="nav-link" onclick="switchTab(event, 'socials')">
+				<p style="color: #FFFFFF; font-weight: 500; font-size: 1rem; letter-spacing: 0px;">Socials</p>
+				</span>
+				<span class="nav-link" onclick="switchTab(event, 'blog')">
+				<p style="color: #FFFFFF; font-weight: 500; font-size: 1rem; letter-spacing: 0px;">Blog</p>
+				</span>
+                <span class="nav-link" onclick="switchTab(event, 'FAQ')">
+				<p style="color: #FFFFFF; font-weight: 500; font-size: 1rem; letter-spacing: 0px;">FAQ</p>
+				</span>
+                <span class="nav-link" onclick="switchTab(event, 'Fanmade')">
+				<p style="color: #FFFFFF; font-weight: 500; font-size: 1rem; letter-spacing: 0px;">Fanmade</p>
+				</span>
+			</nav>
+            </header>
+        
+<main id="about" class="page-content active">
+    <h3 class="section-title">
+        <img loading="lazy" alt="Windows 11 Coin" src="https://em-content.zobj.net/source/microsoft/209/waving-hand-sign_1f44b.png" style="width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-left: 2px;">
+        <span style="color: rgb(175, 1, 1); font-weight: bold;">Wel</span><span style="color: rgb(240, 164, 1); font-weight: bold;">come</span>
+        <img loading="lazy" alt="Windows 11 Coin" src="https://em-content.zobj.net/source/microsoft/153/pushpin_1f4cc.png" style="width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-left: 2px;">
+        <img loading="lazy" alt="Windows 11 Coin" src="https://em-content.zobj.net/source/microsoft/209/heavy-black-heart_2764.png" style="width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-left: -6.3px;"> 
+        <img loading="lazy" alt="Windows 11 Coin" src="https://em-content.zobj.net/source/microsoft/309/coin_1fa99.png" style="width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-left: -7px;">
+    </h3>
+    <p class="section-desc">Hello. <span style="color: yellow; font-weight: bold;">Nice to meet you!</span> I'm <span style="color: cyan; font-weight: bold;">Aibat309boy</span>, a 16 year old.</p> 
+    <p>i'm using <span style="color: rgb(150, 150, 150); font-weight: bold;">Unity</span>. <span style="color: green; font-weight: bold;">Bad Piggies Modded</span>! More updates coming soon to the web site.</p>
+
+    <div class="tab-content" style="margin-top: 30px;">
+        <img class="brand-image-pincoin-phone-version" src="assets/coinhugpin.png" /> 
+    </div>
+</main>
+    <padding-fix>
+        <lip>
+            <div id="socials" class="page-content">
+                <h3 class="section-title">Social Links</h3>
+                <p class="section-desc">Connect with me across platforms below:</p>
+                
+                <div>
+					</script><link rel="modulepreload" as="script" crossorigin="" href="https://Aibat.netlify.app"><style>.custom-lnk{text-decoration:none;display:inline-flex;align-items:center;color:#007bff;font-family:sans-serif;transition:color 0.2s;}.custom-lnk:hover{color:cyan!important;}.custom-lnk span{margin-left:8px;}</style><ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;"><li><a href="https://x.com/AibatAmaznholov" rel="noopener" target="_blank" class="custom-lnk"><iconify-icon icon="logos:twitter" width="1em" height="1em" inline="true" style="color: white;"><template shadowrootmode="open"><style data-style="data-style">:host{display:inline-block;vertical-align:-0.125em}span,svg{display:block}</style><svg xmlns="http://w3.org" width="1em" height="1em" viewBox="0 0 256 209"><path fill="#55acee" d="M256 25.45a105 105 0 0 1-30.166 8.27c10.845-6.5 19.172-16.793 23.093-29.057a105.2 105.2 0 0 1-33.351 12.745C205.995 7.201 192.346.822 177.239.822c-29.006 0-52.523 23.516-52.523 52.52c0 4.117.465 8.125 1.36 11.97c-43.65-2.191-82.35-23.1-108.255-54.876c-4.52 7.757-7.11 16.78-7.11 26.404c0 18.222 9.273 34.297 23.365 43.716a52.3 52.3 0 0 1-23.79-6.57q-.004.33-.003.661c0 25.447 18.104 46.675 42.13 51.5a52.6 52.6 0 0 1-23.718.9c6.683 20.866 26.08 36.05 49.062 36.475c-17.975 14.086-40.622 22.483-65.228 22.483c-4.24 0-8.42-.249-12.529-.734c23.243 14.902 50.85 23.597 80.51 23.597c96.607 0 149.434-80.031 149.434-149.435q0-3.417-.152-6.795A106.8 106.8 0 0 0 256 25.45"></path></svg></template></iconify-icon><span>Twitter</span></a></li><li><a href="https://www.youtube.com/@aibat309boy" rel="noopener" target="_blank" class="custom-lnk"><iconify-icon icon="logos:youtube-icon" width="1em" height="1em" inline="true" style="color: white;"><template shadowrootmode="open"><style data-style="data-style">:host{display:inline-block;vertical-align:-0.125em}span,svg{display:block}</style><svg xmlns="http://w3.org" width="1em" height="1em" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134"></path><path fill="#fff" d="m102.421 128.06l66.328-38.418l-66.328-38.418z"></path></svg></template></iconify-icon><span>YouTube</span></a></li><li><a href="https://www.youtube.com/@AibatGDlol" rel="noopener" target="_blank" class="custom-lnk"><iconify-icon icon="logos:youtube-icon" width="1em" height="1em" inline="true" style="color: white;"><template shadowrootmode="open"><style data-style="data-style">:host{display:inline-block;vertical-align:-0.125em}span,svg{display:block}</style><svg xmlns="http://w3.org" width="1em" height="1em" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134"></path><path fill="#fff" d="m102.421 128.06l66.328-38.418l-66.328-38.418z"></path></svg></template></iconify-icon><span>AibatGDlol</span></a></li><li><a href="https://steamcommunity.com/profiles/76561199490361347/" rel="noopener" target="_blank" class="custom-lnk"><iconify-icon icon="fa:steam" width="1em" height="1em" inline="true" style="color: white;"><template shadowrootmode="open"><style data-style="data-style">:host{display:inline-block;vertical-align:-0.125em}span,svg{display:block}</style><svg xmlns="http://w3.org" width="1em" height="1em" viewBox="0 0 1792 1536"><path fill="currentColor" d="M1582 454q0 101-71.5 172.5T1338 698t-172.5-71.5T1094 454t71.5-172.5T1338 210t172.5 71.5T1582 454m-770 742q0-104-73-177t-177-73q-27 0-54 6l104 42q77 31 109.5 106.5T723 1252q-31 77-107 109t-152 1q-21-8-62-24.5t-61-24.5q32 60 91 96.5t130 36.5q104 0 177-73t73-177m830-741q0-126-89.5-215.5T1337 150q-127 0-216.5 89.5T1031 455q0 127 89.5 216t216.5 89q126 0 215.5-89t89.5-216m150 0q0 189-133.5 322T1337 910l-437 319q-12 129-109 218t-229 89q-121 0-214-76t-118-192L0 1176V747l389 157q79-48 173-48q13 0 35 2l284-407q2-187 135.5-319T1337 0q188 0 321.5 133.5T1792 455"></path></svg></template></iconify-icon><span>Steam</span></a></li><li><a href="https://github.com/Aibat309boy" rel="noopener" target="_blank" class="custom-lnk"><iconify-icon icon="logos:github-icon" width="1em" height="1em" inline="true" style="color: white;"><template shadowrootmode="open"><style data-style="data-style">:host{display:inline-block;vertical-align:-0.125em}span,svg{display:block}</style><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 1536 1504"><path fill="currentColor" d="M768 0q209 0 385.5 103T1433 382.5T1536 768q0 251-146.5 451.5T1011 1497q-27 5-40-7t-13-30q0-3 .5-76.5t.5-134.5q0-97-52-142q57-6 102.5-18t94-39t81-66.5t53-105T1258 728q0-119-79-206q37-91-8-204q-28-9-81 11t-92 44l-38 24q-93-26-192-26t-192 26q-16-11-42.5-27T450 331.5T365 318q-45 113-8 204q-79 87-79 206q0 85 20.5 150T351 983t80.5 67t94 39t102.5 18q-39 36-49 103q-21 10-45 15t-57 5t-65.5-21.5T356 1146q-19-32-48.5-52t-49.5-24l-20-3q-21 0-29 4.5t-5 11.5t9 14t13 12l7 5q22 10 43.5 38t31.5 51l10 23q13 38 44 61.5t67 30t69.5 7t55.5-3.5l23-4q0 38 .5 88.5t.5 54.5q0 18-13 30t-40 7q-232-77-378.5-277.5T0 768q0-209 103-385.5T382.5 103T768 0M291 1103q3-7-7-12q-10-3-13 2q-3 7 7 12q9 6 13-2m31 34q7-5-2-16q-10-9-16-3q-7 5 2 16q10 10 16 3m30 45q9-7 0-19q-8-13-17-6q-9 5 0 18t17 7m42 42q8-8-4-19q-12-12-20-3q-9 8 4 19q12 12 20 3m57 25q3-11-13-16q-15-4-19 7t13 15q15 6 19-6m63 5q0-13-17-11q-16 0-16 11q0 13 17 11q16 0 16-11m58-10q-2-11-18-9q-16 3-14 15t18 8t14-14"></path></svg></template></iconify-icon><span class="mx-2">GitHub</span></a></li><lip></ul></div><div class="md:basis-0 md:flex-grow-"></a></script>
+                </div>
+            </div>
+
+            <div id="FAQ" class="page-content">
+                <h3 class="section-title">FAQ</h3>
+                <p class="section-desc">Find about the website.</p>
+                <div class="blog-section">
+                    <div class="blog-item">
+                        <div class="blog-body-content">
+                            <p class="blog-headline">What is this website?</p>
+                            <p class="blog-text">This is a page with updates.</p>
+                        </div>
+                    </div>
+                    <div class="blog-item">
+                        <div class="blog-body-content">
+                            <p class="blog-headline">How can I follow you?</p>
+                            <p class="blog-text">Use the Socials tab to visit my Twitter, YouTube and more.</p>
+                        </div>
+                    </div>
+                    <div class="blog-item">
+                        <div class="blog-body-content">
+                            <p class="blog-headline">Will you add more updates?</p>
+                            <p class="blog-text">Yes — more content and improvements are coming soon.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="coming-soon-wrapper" style="margin-top: 16px;">
+                    <p style="color: #FFFFFF; font-weight: 600; font-size: 1rem; letter-spacing: 0.5px; text-align: center;">More FAQ updates soon.</p>
+                </div>
+            </div>
+
+            <div id="Fanmade" class="page-content">
+                <h3 class="section-title">i fanmade & fan channel!</h3>
+                <p class="section-desc">find channel & game.</p>
+                <div class="fanmade-section">
+                    <div class="blog-item">
+                        <img src="assets/BP.png" alt="Bad Piggies" class="blog-aside-img">
+                        <div class="blog-body-content">
+                            <p class="blog-headline">I fanmade Bad Piggies</p>
+                            <p class="blog-text">i don't know new episodes/level yet</p>
+                            <p class="blog-text"><a href="https://youtu.be/2AAmbHeE1Vo?si=aykSDQenbVRsZyiC" class="blog-link">Watch on YouTube fanmade BP</a></p>
+                        </div>
+                    </div>
+                    <div class="blog-item">
+                        <img src="assets/RMR.avif" alt="Run Monster Run" class="blog-aside-img">
+                        <div class="blog-body-content">
+                            <p class="blog-headline">I liked run monster run</p>
+                            <p class="blog-text">looks episode 1 cool next episodes future new video</p>
+                            <p class="blog-text"><a href="https://www.youtube.com/watch?v=mf11dE1L4NQ&t=2s" class="blog-link">Watch on YouTube RMR</a></p>
+                        </div>
+                    </div>
+                    <div class="blog-item">
+                        <img src="assets/Dsand.png" alt="Dsand" class="blog-aside-img">
+                        <div class="blog-body-content">
+                            <p class="blog-headline">I liked Dsand</p>
+                            <p class="blog-text">too many episode new future soon</p>
+                            <p class="blog-text"><a href="https://www.youtube.com/@dsand00/shorts" class="blog-link">watch shorts many episode!</a></p>
+                        </div>
+                    </div>
+                    <div class="blog-item">
+                        <img src="assets/BFDI.avif" alt="BFDI" class="blog-aside-img">
+                        <div class="blog-body-content">
+                            <p class="blog-headline">I fan BFDI!!</p>
+                            <p class="blog-text">like future new episode who won!</p>
+                            <p class="blog-text"><a href="https://www.youtube.com/@BFDI" class="blog-link">watch shorts many episode!</a></p>
+                        </div>
+                    </div>
+                    <div class="blog-item">
+                        <img src="assets/II.avif" alt="II" class="blog-aside-img">
+                        <div class="blog-body-content">
+                            <p class="blog-headline">I fan Inanimate Insanity!!</p>
+                            <p class="blog-text">i hope mepad fixed... future new episode </p>
+                            <p class="blog-text"><a href="https://www.youtube.com/@AnimationEpic" class="blog-link">watch shorts many episode!</a></p>
+                        </div>
+                    </div>
+                    <div class="fanmade" style="margin-top: 8px;">
+                        <p style="color: #FFFFFF; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px;"><center>add too many game/fan channel update soon</center></p>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div id="blog" class="page-content">
+                <div class="blog-section">
+                    
+                    <div class="blog-item">
+                        <img src="assets/archive.png" alt="Archive File" class="blog-aside-img">
+                        
+                        <div class="blog-body-content">
+                            <p class="blog-headline">Can upload Video/Image/files text backup!</p>
+                            <p>
+                                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" class="blog-link">📁 My Drive server (SOON)</a>
+                            </p>
+                            <p class="blog-text">whatever my laptop is died. i got broken plug</p>
+                        </div>
+                    </div>
+
+					<div class="blog-item">
+                        <img src="assets/BP.png" alt="Bad Piggies" class="blog-aside-img">
+                        
+                        <div class="blog-body-content">
+                            <p class="blog-headline">bad pigiges in website</p>
+                            <p>
+                                <a href="https://arcade.chipmunk.land/bad-piggies/" class="blog-link">Play BP webGL</a>
+                            </p>
+                            <p class="blog-text">UPDATE fixed!! can other phone or computer/laptop play bad piggies in webgl! (phone can't zoom touch controls yeah impossible)
+                            <div>
+                                by omarizakaria
+                            </div>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="blog-item">
+                        <img src="assets/BPLE BPRB.png" alt="Bad Piggies" class="blog-aside-img">
+                        
+                        <div class="blog-body-content">
+                            <p class="blog-headline">BPLE/BPRB in website (BPLE is OUT!)</p>
+                            <p>
+                                <a href="https://nostaligafun.pages.dev/games/games-accualy/ANDROID/BadPiggiesRebootedEpsilon_Data/index.html" class="blog-link">BP::RB</a>
+                                <A text>|</A>
+                                <a href="https://bad-piggies-leading-edge.netlify.app/" class="blog-link">BPLE</a>
+                                <A text>|</A>
+                                <a href="https://bple.netlify.app/" class="blog-link">BPLE Beta bug</a>
+                            </p>
+                            <p class="blog-text">BPLE/BPRB can play i fixed it!
+                            <div>
+                                by ogmidasguy_yt (ts why added watermark in BPRB webgl bruh) 
+                            </div>
+                            </p>
+                            <div>by Aibat309boy build WebGL!</div>
+                            <p>
+                                <div>by omarizakaria is works trying fixed bp::rb buggy code <a class="blog-text" href="https://screenhotsfrombpmle.netlify.app/" class="blog-link">here screenhots</a></div>
+                            </p>
+                        </div>
+                    </div>
+
+					<div class="blog-item">
+                        <img src="assets/Draw.png" alt="draw to square" class="blog-aside-img">
+                        
+                        <div class="blog-body-content">
+                            <p class="blog-headline">draw to ascii, square, custom Mode Text</p>
+                            <p>
+                                <a href="https://drawtotexts.netlify.app/" class="blog-link">Draw to other!</a>
+                            </p>
+                            <p class="blog-text">draw! but phone versions are coming soon
+                                <div>
+                                by Aibat309boy & bones
+                            </div>
+                            </p>
+                        </div>
+                    </div>
+					
+									<div class="coming-soon-wrapper" style="margin-top: 8px;">
+					<p style="color: #FFFFFF; font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px;"><center>Update Soon :3</center></p>
+				</div>
+                </padding-fix>
+                    
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+	
+    <script>
+        let normalX = window.innerWidth * 0.15;
+        let normalY = window.innerHeight * 0.12;
+
+        const dragTitlebar = document.getElementById('windowTitlebar');
+        const targetWindow = document.getElementById('appWindow');
+        const maximizeSvg = document.getElementById('maximizeSvg');
+
+        targetWindow.style.left = normalX + 'px';
+        targetWindow.style.top = normalY + 'px';
+
+        function switchTab(event, tabId) {
+            const pages = document.querySelectorAll('.page-content');
+            pages.forEach(page => page.classList.remove('active'));
+
+            const links = document.querySelectorAll('.nav-link');
+            links.forEach(link => link.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+		let closeTimeout; 
+
+		function closeWindow() {
+			targetWindow.classList.remove('open-animation');
+			targetWindow.classList.add('close-animation');
+			clearTimeout(closeTimeout); 
+
+			closeTimeout = setTimeout(() => {
+				targetWindow.style.display = 'none';
+			}, 180);
+		}
+
+        function openWindow() {
+            clearTimeout(closeTimeout);
+            targetWindow.style.display = 'flex';
+            targetWindow.classList.remove('close-animation');
+            void targetWindow.offsetWidth;
+            targetWindow.classList.add('open-animation');
+        }
+
+        function updateVersionLabel() {
+            const isPhone = window.innerWidth <= 768;
+            document.body.classList.toggle('phone-version', isPhone);
+            document.body.classList.toggle('desktop-version', !isPhone);
+
+            const badge = document.getElementById('versionBadge');
+            if (badge) {
+                badge.textContent = isPhone ? 'Phone version' : 'PC version';
+            }
+
+            if (isPhone) {
+                targetWindow.style.left = '10px';
+                targetWindow.style.top = '10px';
+            } else {
+                targetWindow.style.left = normalX + 'px';
+                targetWindow.style.top = normalY + 'px';
+            }
+        }
+
+        window.addEventListener('resize', updateVersionLabel);
+        window.addEventListener('DOMContentLoaded', updateVersionLabel);
+
+        let isDragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        dragTitlebar.addEventListener('mousedown', (e) => {
+            if (targetWindow.classList.contains('maximized')) return;
+
+            isDragging = true;
+            
+            offsetX = e.clientX - targetWindow.offsetLeft;
+            offsetY = e.clientY - targetWindow.offsetTop;
+
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+        });
+
+        function mouseMoveHandler(e) {
+            if (!isDragging) return;
+
+            let newX = e.clientX - offsetX;
+            let newY = e.clientY - offsetY;
+
+            targetWindow.style.left = newX + 'px';
+            targetWindow.style.top = newY + 'px';
+
+            normalX = newX;
+            normalY = newY;
+        }
+
+        function mouseUpHandler() {
+            isDragging = false;
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+        }
+		
+        function switchTab(event, tabId) {
+    // 1. Switch the text content pages
+    const pages = document.querySelectorAll('.page-content');
+    pages.forEach(page => page.classList.remove('active'));
+
+    const links = document.querySelectorAll('.nav-link');
+    links.forEach(link => link.classList.remove('active'));
+
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+
+    // 2. Control the Pin/Coin image visibility based on the current tabId
+    const pincoinImage = document.querySelector('.brand-image-pincoin');
+    if (pincoinImage) {
+        if (tabId === 'about') {
+            pincoinImage.style.display = 'block'; 
+        } else {
+            pincoinImage.style.display = 'none'; 
+        }
+    }
+}
+
+    </script>
+    <span class="credit-watermark">by Aibat309boy</span>
+</div>
+</body>
+</html>
