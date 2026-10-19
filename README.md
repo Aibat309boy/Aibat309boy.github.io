@@ -1,2 +1,1 @@
-# my site :3
-by Aibat309boy
+# Aibat309boy.github.io
